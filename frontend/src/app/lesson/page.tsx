@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { XCircle, Mic, HelpCircle } from "lucide-react";
+import { XCircle, Volume2, HelpCircle } from "lucide-react";
 
 export default function Lesson() {
     const [exercises, setExercises] = useState<any[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedWords, setSelectedWords] = useState<string[]>([]);
     const [showHint, setShowHint] = useState(false);
-    const [transcript, setTranscript] = useState("");
     const router = useRouter();
 
     useEffect(() => {
@@ -17,30 +17,31 @@ export default function Lesson() {
             .then(setExercises);
     }, []);
 
-    // Speech Recognition Setup
-    const startListening = () => {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.onresult = (event: any) => {
-                setTranscript(event.results[0][0].transcript);
-            };
-            recognition.start();
+    const current = exercises[currentIndex];
+
+    // Text-to-Speech
+    const speakQuestion = () => {
+        const utterance = new SpeechSynthesisUtterance(current.question_text);
+        window.speechSynthesis.speak(utterance);
+    };
+
+    const handleWordClick = (word: string) => {
+        setSelectedWords([...selectedWords, word]);
+    };
+
+    const checkAnswer = () => {
+        if (JSON.stringify(selectedWords) === JSON.stringify(current.correct)) {
+            alert("Correct!");
+            setSelectedWords([]);
+            if (currentIndex < exercises.length - 1) setCurrentIndex(currentIndex + 1);
+            else router.push("/");
         } else {
-            alert("Microphone not supported in this browser.");
+            alert("Try again!");
+            setSelectedWords([]);
         }
     };
 
-    if (exercises.length === 0) return <div className="p-20 text-center">Loading Content...</div>;
-
-    const current = exercises[currentIndex];
-
-    const handleNext = () => {
-        setShowHint(false);
-        setTranscript("");
-        if (currentIndex < exercises.length - 1) setCurrentIndex(currentIndex + 1);
-        else router.push("/");
-    };
+    if (exercises.length === 0) return <div className="p-20 text-center">Loading...</div>;
 
     return (
         <main className="flex min-h-screen flex-col items-center p-6 bg-white font-sans text-gray-800">
@@ -51,29 +52,24 @@ export default function Lesson() {
                 </div>
 
                 <h1 className="text-3xl font-black mb-6">{current.question_text}</h1>
+                <button onClick={speakQuestion} className="bg-blue-100 p-3 rounded-full mb-6"><Volume2 size={24} className="text-blue-600" /></button>
 
-                {/* Hint Box */}
                 <div className="mb-8 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-2xl">
-                    <button onClick={() => setShowHint(!showHint)} className="flex items-center gap-2 text-blue-700 font-bold mb-2">
-                        <HelpCircle size={20} /> {showHint ? "Hide Hint" : "Need help?"}
-                    </button>
-                    {showHint && <p className="text-blue-600">{current.hint}</p>}
+                    <button onClick={() => setShowHint(!showHint)} className="flex items-center gap-2 text-blue-700 font-bold"><HelpCircle size={20} /> Need help?</button>
+                    {showHint && <p className="text-blue-600 mt-2">{current.hint}</p>}
                 </div>
 
-                {/* Mic Practice */}
-                <div className="mb-10 p-6 border-2 border-dashed border-gray-300 rounded-3xl text-center">
-                    <button onClick={startListening} className="bg-gray-100 p-4 rounded-full mb-4 hover:bg-gray-200"><Mic size={32} /></button>
-                    <p className="font-bold text-gray-500">{transcript || "Tap mic to practice pronunciation"}</p>
+                <div className="min-h-[60px] border-b-2 border-gray-300 mb-8 flex gap-2">
+                    {selectedWords.map((w, i) => <span key={i} className="p-3 bg-gray-100 rounded-lg font-bold">{w}</span>)}
                 </div>
 
-                {/* Answer Options */}
                 <div className="flex flex-wrap gap-3 mb-10">
                     {current.options.map((word: string, i: number) => (
-                        <button key={i} className="p-4 border-2 border-gray-200 rounded-2xl font-bold text-lg hover:bg-gray-50">{word}</button>
+                        <button key={i} onClick={() => handleWordClick(word)} className="p-4 border-2 border-gray-200 rounded-2xl font-bold text-lg hover:bg-gray-100">{word}</button>
                     ))}
                 </div>
 
-                <button onClick={handleNext} className="w-full bg-green-500 text-white font-black py-4 rounded-2xl text-xl shadow-[0_6px_0_0_#46a302] hover:bg-green-600">
+                <button onClick={checkAnswer} className="w-full bg-green-500 text-white font-black py-4 rounded-2xl text-xl hover:bg-green-600">
                     CHECK
                 </button>
             </div>
