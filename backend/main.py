@@ -1,12 +1,9 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-import json
-from database import SessionLocal, User, Unit, Skill, Lesson, Exercise, generate_integrity_hash
 
 app = FastAPI()
 
+# Enable CORS for your Vercel frontend URL
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,66 +12,85 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-class LessonComplete(BaseModel):
-    xp_gained: int
+# Mock Data Storage
+DATABASE = {
+    "Spanish": {
+        "user": {"streak_count": 5, "total_xp": 1200, "hearts": 5},
+        "path": [{"id": 1, "title": "Basics", "skills": [{"id": 1, "title": "Greeting"}]}],
+        "exercises": [
+            {
+                "type": "translate",
+                "question_text": "The boy drinks water.",
+                "options": ["El", "nino", "bebe", "agua"],
+                "correct_answer": '["El", "nino", "bebe", "agua"]'
+            }
+        ]
+    },
+    "French": {
+        "user": {"streak_count": 2, "total_xp": 300, "hearts": 4},
+        "path": [{"id": 1, "title": "Les Bases", "skills": [{"id": 1, "title": "Salutations"}]}],
+        "exercises": [
+            {
+                "type": "translate",
+                "question_text": "The boy drinks water.",
+                "options": ["Le", "garcon", "boit", "de", "l'eau"],
+                "correct_answer": '["Le", "garcon", "boit", "de", "l\'eau"]'
+            }
+        ]
+    },
+    "German": {
+        "user": {"streak_count": 1, "total_xp": 100, "hearts": 3},
+        "path": [{"id": 1, "title": "Grundlagen", "skills": [{"id": 1, "title": "Begrüßungen"}]}],
+        "exercises": [
+            {
+                "type": "translate",
+                "question_text": "The boy drinks water.",
+                "options": ["Der", "Junge", "trinkt", "Wasser"],
+                "correct_answer": '["Der", "Junge", "trinkt", "Wasser"]'
+            }
+        ]
+    },
+    "Japanese": {
+        "user": {"streak_count": 0, "total_xp": 50, "hearts": 5},
+        "path": [{"id": 1, "title": "Kiso", "skills": [{"id": 1, "title": "Aisatsu"}]}],
+        "exercises": [
+            {
+                "type": "translate",
+                "question_text": "The boy drinks water.",
+                "options": ["Shōnen", "wa", "mizu", "o", "nomimasu"],
+                "correct_answer": '["Shōnen", "wa", "mizu", "o", "nomimasu"]'
+            }
+        ]
+    }
+}
 
 
 @app.get("/api/user")
-def get_user(db: Session = Depends(get_db)):
-    return db.query(User).filter(User.username == "Learner1").first()
+def get_user(request: Request):
+    lang = request.query_params.get("lang", "Spanish")
+    return DATABASE.get(lang, DATABASE["Spanish"])["user"]
 
 
 @app.get("/api/path")
-def get_path(db: Session = Depends(get_db)):
-    units = db.query(Unit).order_by(Unit.order).all()
-    result = []
-    for u in units:
-        skills = db.query(Skill).filter(
-            Skill.unit_id == u.id).order_by(Skill.order).all()
-        result.append({
-            "id": u.id,
-            "title": u.title,
-            "skills": [{"id": s.id, "title": s.title} for s in skills]
-        })
-    return result
+def get_path(request: Request):
+    lang = request.query_params.get("lang", "Spanish")
+    return DATABASE.get(lang, DATABASE["Spanish"])["path"]
 
 
 @app.get("/api/lessons/1/exercises")
-def get_exercises(db: Session = Depends(get_db)):
-    exercises = db.query(Exercise).filter(Exercise.lesson_id == 1).all()
-    result = []
-    for ex in exercises:
-        result.append({
-            "id": ex.id,
-            "type": ex.type,
-            "question_text": ex.question_text,
-            "options": json.loads(ex.options),
-            "correct_answer": ex.correct_answer
-        })
-    return result
-
-
-@app.post("/api/lessons/complete")
-def complete_lesson(data: LessonComplete, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == "Learner1").first()
-    user.total_xp += data.xp_gained
-    user.streak_count += 1
-    user.progress_hash = generate_integrity_hash(
-        user.username, user.total_xp, user.streak_count)
-    db.commit()
-    return {"status": "success"}
+def get_exercises(request: Request):
+    lang = request.query_params.get("lang", "Spanish")
+    return DATABASE.get(lang, DATABASE["Spanish"])["exercises"]
 
 
 @app.get("/api/leaderboard")
-def get_leaderboard(db: Session = Depends(get_db)):
-    users = db.query(User).order_by(User.total_xp.desc()).all()
-    return [{"username": u.username, "total_xp": u.total_xp} for u in users]
+def get_leaderboard():
+    return [
+        {"username": "Learner1", "total_xp": 1500},
+        {"username": "Bhav", "total_xp": 1200}
+    ]
+
+
+@app.post("/api/lessons/complete")
+def complete_lesson(data: dict):
+    return {"status": "success"}
