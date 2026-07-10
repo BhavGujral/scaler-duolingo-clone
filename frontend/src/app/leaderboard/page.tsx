@@ -9,11 +9,17 @@ export default function Leaderboard() {
     const router = useRouter();
 
     useEffect(() => {
+        // Auth Check
+        if (!localStorage.getItem("user_name")) {
+            router.push("/login");
+            return;
+        }
+
         fetch("https://scaler-duolingo-clone.onrender.com/api/leaderboard")
             .then((res) => res.json())
             .then(setLeaderboard)
             .catch(console.error);
-    }, []);
+    }, [router]);
 
     return (
         <main className="flex min-h-screen flex-col items-center bg-white pb-24 font-sans text-gray-800">
@@ -68,7 +74,7 @@ export default function Leaderboard() {
                 <button onClick={() => router.push('/leaderboard')} className="flex flex-col items-center text-blue-500 hover:bg-blue-50 p-3 rounded-2xl transition-colors">
                     <Trophy size={32} strokeWidth={2.5} />
                 </button>
-                <button className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
+                <button onClick={() => router.push('/profile')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
                     <UserIcon size={32} strokeWidth={2.5} />
                 </button>
             </nav>

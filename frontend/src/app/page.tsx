@@ -10,6 +10,12 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
+    // Auth Check
+    if (!localStorage.getItem("user_name")) {
+      router.push("/login");
+      return;
+    }
+
     fetch("https://scaler-duolingo-clone.onrender.com/api/user")
       .then((res) => res.json())
       .then(setUserData)
@@ -19,7 +25,7 @@ export default function Dashboard() {
       .then((res) => res.json())
       .then(setPathData)
       .catch(console.error);
-  }, []);
+  }, [router]);
 
   return (
     <main className="flex min-h-screen flex-col items-center pb-24 font-sans text-gray-800">
@@ -95,7 +101,7 @@ export default function Dashboard() {
         <button onClick={() => router.push('/leaderboard')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
           <Trophy size={32} strokeWidth={2.5} />
         </button>
-        <button className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
+        <button onClick={() => router.push('/profile')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
           <UserIcon size={32} strokeWidth={2.5} />
         </button>
       </nav>
