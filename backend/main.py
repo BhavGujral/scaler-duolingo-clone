@@ -5,29 +5,26 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[
                    "*"], allow_methods=["*"], allow_headers=["*"])
 
+# Dynamic Leaderboard
+LEADERBOARD = [{"username": "Learner1", "total_xp": 1500}]
+
 DATABASE = {
     "Spanish": {
         "exercises": [
-            {"id": 1, "question_text": "The boy drinks water.", "options": ["El", "niño", "bebe", "agua"], "correct": [
-                "El", "niño", "bebe", "agua"], "hint": "In Spanish, the noun usually comes before the verb, and 'bebe' is the third-person singular of 'beber' (to drink)."},
-            {"id": 2, "question_text": "She eats an apple.", "options": ["Ella", "come", "una", "manzana"], "correct": [
-                "Ella", "come", "una", "manzana"], "hint": "'Ella' is the subject pronoun for she. 'Come' is the conjugated form of 'comer'."}
+            {"type": "translate", "question_text": "The boy drinks water.", "options": [
+                "El", "niño", "bebe", "agua"], "correct": ["El", "niño", "bebe", "agua"], "hint": "Noun before verb."},
+            {"type": "match", "question_text": "Match the words", "pairs": [{"term": "Hello", "match": "Hola"}, {
+                "term": "Goodbye", "match": "Adiós"}], "hint": "Basic greetings."},
+            {"type": "choice", "question_text": "What is 'Apple'?", "options": [
+                "Manzana", "Perro", "Gato"], "correct": "Manzana", "hint": "It's a red fruit."}
         ]
     },
     "French": {
         "exercises": [
-            {"id": 1, "question_text": "The boy drinks water.", "options": ["Le", "garçon", "boit", "de", "l'eau"], "correct": [
-                "Le", "garçon", "boit", "de", "l'eau"], "hint": "Note the partitive article 'de' before water, and 'boit' is the conjugation of 'boire'."},
-            {"id": 2, "question_text": "I like bread.", "options": ["J'aime", "le", "pain"], "correct": [
-                "J'aime", "le", "pain"], "hint": "In French, we use 'le' (definite article) with the verb 'aimer' even when expressing general preferences."}
-        ]
-    },
-    "German": {
-        "exercises": [
-            {"id": 1, "question_text": "The boy drinks water.", "options": ["Der", "Junge", "trinkt", "Wasser"], "correct": [
-                "Der", "Junge", "trinkt", "Wasser"], "hint": "'Der' is the masculine nominative article. German word order puts the verb in the second position."},
-            {"id": 2, "question_text": "She reads a book.", "options": ["Sie", "liest", "ein", "Buch"], "correct": [
-                "Sie", "liest", "ein", "Buch"], "hint": "The verb 'lesen' is irregular; notice the vowel change 'e' to 'ie' in the third person singular."}
+            {"type": "translate", "question_text": "I like bread.", "options": [
+                "J'aime", "le", "pain"], "correct": ["J'aime", "le", "pain"], "hint": "J'aime is the phrase."},
+            {"type": "choice", "question_text": "What is 'Cat'?", "options": [
+                "Chat", "Chien", "Oiseau"], "correct": "Chat", "hint": "Sounds like 'Sha'."}
         ]
     }
 }
@@ -39,16 +36,15 @@ def get_exercises(request: Request):
     return DATABASE.get(lang, DATABASE["Spanish"])["exercises"]
 
 
-@app.get("/api/user")
-def get_user(): return {"streak_count": 5, "total_xp": 1200, "hearts": 5}
-
-
-@app.get("/api/path")
-def get_path(): return [{"id": 1, "title": "Basics",
-                         "skills": [{"id": 1, "title": "Learning"}]}]
-
-
 @app.get("/api/leaderboard")
-def get_leaderboard(): return [{"username": "Learner1", "total_xp": 1500}]
-@app.post("/api/lessons/complete")
-def complete_lesson(data: dict): return {"status": "success"}
+def get_leaderboard(): return LEADERBOARD
+
+
+@app.post("/api/leaderboard/update")
+def update_leaderboard(data: dict):
+    LEADERBOARD.append({"username": data["username"], "total_xp": data["xp"]})
+    return {"status": "success"}
+
+
+@app.get("/api/user")
+def get_user(): return {"streak_count": 5, "total_xp": 1200}
