@@ -9,16 +9,17 @@ export default function Leaderboard() {
     const router = useRouter();
 
     useEffect(() => {
-        // Auth Check
-        if (!localStorage.getItem("user_name")) {
-            router.push("/login");
-            return;
-        }
+        if (typeof window !== "undefined") {
+            if (!localStorage.getItem("user_name")) {
+                router.push("/login");
+                return;
+            }
 
-        fetch("https://scaler-duolingo-clone.onrender.com/api/leaderboard")
-            .then((res) => res.json())
-            .then(setLeaderboard)
-            .catch(console.error);
+            fetch("https://scaler-duolingo-clone.onrender.com/api/leaderboard")
+                .then((res) => res.json())
+                .then(setLeaderboard)
+                .catch(console.error);
+        }
     }, [router]);
 
     return (
@@ -48,8 +49,7 @@ export default function Leaderboard() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 key={index}
-                                className={`flex items-center justify-between rounded-2xl p-5 border-2 ${user.username === "Learner1" ? "border-green-500 bg-green-50" : "border-gray-100 bg-white"
-                                    }`}
+                                className="flex items-center justify-between rounded-2xl p-5 border-2 border-gray-100 bg-white"
                             >
                                 <div className="flex items-center gap-6">
                                     <span className={`text-2xl font-black ${index === 0 ? "text-yellow-500" : index === 1 ? "text-gray-400" : index === 2 ? "text-amber-700" : "text-gray-300"}`}>
