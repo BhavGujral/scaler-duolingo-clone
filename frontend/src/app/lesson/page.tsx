@@ -16,7 +16,7 @@ export default function Lesson() {
     const [typedAnswer, setTypedAnswer] = useState("");
 
     useEffect(() => {
-        fetch("http://127.0.0.1:8000/api/lessons/1/exercises")
+        fetch("https://scaler-duolingo-clone.onrender.com/api/lessons/1/exercises")
             .then((res) => res.json())
             .then((data) => {
                 setExercises(data);
@@ -65,7 +65,7 @@ export default function Lesson() {
             setCurrentIndex(nextIndex);
             setupExercise(exercises[nextIndex]);
         } else {
-            await fetch("http://127.0.0.1:8000/api/lessons/complete", {
+            await fetch("https://scaler-duolingo-clone.onrender.com/api/lessons/complete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ xp_gained: 25 }),

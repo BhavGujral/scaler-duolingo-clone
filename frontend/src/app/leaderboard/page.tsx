@@ -9,7 +9,7 @@ export default function Leaderboard() {
     const router = useRouter();
 
     useEffect(() => {
-        fetch("http://127.0.0.1:8000/api/leaderboard")
+        fetch("https://scaler-duolingo-clone.onrender.com/api/leaderboard")
             .then((res) => res.json())
             .then(setLeaderboard)
             .catch(console.error);
