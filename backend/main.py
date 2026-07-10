@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Enable CORS for your Vercel frontend URL
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,69 +11,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mock Data Storage
 DATABASE = {
     "Spanish": {
-        "user": {"streak_count": 5, "total_xp": 1200, "hearts": 5},
-        "path": [{"id": 1, "title": "Basics", "skills": [{"id": 1, "title": "Greeting"}]}],
         "exercises": [
-            {
-                "type": "translate",
-                "question_text": "The boy drinks water.",
-                "options": ["El", "nino", "bebe", "agua"],
-                "correct_answer": '["El", "nino", "bebe", "agua"]'
-            }
+            {"type": "translate", "question_text": "The boy drinks water.", "options": [
+                "El", "niño", "bebe", "agua"], "correct": '["El", "niño", "bebe", "agua"]', "hint": "Think about the articles: The (El) and the noun (agua)."},
+            {"type": "translate", "question_text": "She eats an apple.", "options": [
+                "Ella", "come", "una", "manzana"], "correct": '["Ella", "come", "una", "manzana"]', "hint": " 'Ella' means She in Spanish."}
         ]
     },
     "French": {
-        "user": {"streak_count": 2, "total_xp": 300, "hearts": 4},
-        "path": [{"id": 1, "title": "Les Bases", "skills": [{"id": 1, "title": "Salutations"}]}],
         "exercises": [
-            {
-                "type": "translate",
-                "question_text": "The boy drinks water.",
-                "options": ["Le", "garcon", "boit", "de", "l'eau"],
-                "correct_answer": '["Le", "garcon", "boit", "de", "l\'eau"]'
-            }
+            {"type": "translate", "question_text": "The boy drinks water.", "options": [
+                "Le", "garçon", "boit", "de", "l'eau"], "correct": '["Le", "garçon", "boit", "de", "l\'eau"]', "hint": "In French, water is 'l'eau'."},
+            {"type": "translate", "question_text": "I like the bread.", "options": [
+                "J'aime", "le", "pain"], "correct": '["J\'aime", "le", "pain"]', "hint": "Remember the contraction: Je + aime = J'aime."}
         ]
     },
     "German": {
-        "user": {"streak_count": 1, "total_xp": 100, "hearts": 3},
-        "path": [{"id": 1, "title": "Grundlagen", "skills": [{"id": 1, "title": "Begrüßungen"}]}],
         "exercises": [
-            {
-                "type": "translate",
-                "question_text": "The boy drinks water.",
-                "options": ["Der", "Junge", "trinkt", "Wasser"],
-                "correct_answer": '["Der", "Junge", "trinkt", "Wasser"]'
-            }
+            {"type": "translate", "question_text": "The boy drinks water.", "options": [
+                "Der", "Junge", "trinkt", "Wasser"], "correct": '["Der", "Junge", "trinkt", "Wasser"]', "hint": "German noun 'Junge' takes 'Der'."},
+            {"type": "translate", "question_text": "She reads a book.", "options": [
+                "Sie", "liest", "ein", "Buch"], "correct": '["Sie", "liest", "ein", "Buch"]', "hint": "The verb 'lesen' (to read) changes for 'Sie' to 'liest'."}
         ]
     },
     "Japanese": {
-        "user": {"streak_count": 0, "total_xp": 50, "hearts": 5},
-        "path": [{"id": 1, "title": "Kiso", "skills": [{"id": 1, "title": "Aisatsu"}]}],
         "exercises": [
-            {
-                "type": "translate",
-                "question_text": "The boy drinks water.",
-                "options": ["Shōnen", "wa", "mizu", "o", "nomimasu"],
-                "correct_answer": '["Shōnen", "wa", "mizu", "o", "nomimasu"]'
-            }
+            {"type": "translate", "question_text": "The boy drinks water.", "options": [
+                "Shōnen", "wa", "mizu", "o", "nomimasu"], "correct": '["Shōnen", "wa", "mizu", "o", "nomimasu"]', "hint": "In Japanese, the object marker is 'o'."},
+            {"type": "translate", "question_text": "I eat rice.", "options": [
+                "Watashi", "wa", "gohan", "o", "tabemasu"], "correct": '["Watashi", "wa", "gohan", "o", "tabemasu"]', "hint": "Tabemasu is the polite form of to eat."}
         ]
     }
 }
-
-
-@app.get("/api/user")
-def get_user(request: Request):
-    lang = request.query_params.get("lang", "Spanish")
-    return DATABASE.get(lang, DATABASE["Spanish"])["user"]
-
-
-@app.get("/api/path")
-def get_path(request: Request):
-    lang = request.query_params.get("lang", "Spanish")
-    return DATABASE.get(lang, DATABASE["Spanish"])["path"]
 
 
 @app.get("/api/lessons/1/exercises")
@@ -83,14 +53,18 @@ def get_exercises(request: Request):
     return DATABASE.get(lang, DATABASE["Spanish"])["exercises"]
 
 
+@app.get("/api/user")
+def get_user(): return {"streak_count": 5, "total_xp": 1200, "hearts": 5}
+
+
+@app.get("/api/path")
+def get_path(): return [{"id": 1, "title": "Basics",
+                         "skills": [{"id": 1, "title": "Learning"}]}]
+
+
 @app.get("/api/leaderboard")
-def get_leaderboard():
-    return [
-        {"username": "Learner1", "total_xp": 1500},
-        {"username": "Bhav", "total_xp": 1200}
-    ]
+def get_leaderboard(): return [{"username": "Learner1", "total_xp": 1500}]
 
 
 @app.post("/api/lessons/complete")
-def complete_lesson(data: dict):
-    return {"status": "success"}
+def complete_lesson(data: dict): return {"status": "success"}
