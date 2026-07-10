@@ -3,17 +3,27 @@ from database import SessionLocal, engine, Base, User, Unit, Skill, Lesson, Exer
 
 
 def seed_data():
-    # Reset database for advanced seed
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
 
-    # Users
-    u1_hash = generate_integrity_hash("Learner1", 120, 3)
-    user1 = User(username="Learner1", total_xp=120,
-                 streak_count=3, hearts=5, progress_hash=u1_hash)
-    db.add(user1)
+    # Populate Leaderboard with multiple competitors
+    users_data = [
+        ("Learner1", 120, 3, 5),
+        ("KingKohli_18", 950, 15, 5),
+        ("ScalerPro", 890, 12, 5),
+        ("Bhav_G", 450, 7, 5),
+        ("CodeNinja", 320, 5, 4),
+        ("PunjabiCoder", 210, 2, 5),
+        ("WebDev_Master", 150, 1, 3)
+    ]
+
+    for username, xp, streak, hearts in users_data:
+        hash_val = generate_integrity_hash(username, xp, streak)
+        db.add(User(username=username, total_xp=xp, streak_count=streak,
+               hearts=hearts, progress_hash=hash_val))
+
     db.commit()
 
     # Course Structure
@@ -83,7 +93,7 @@ def seed_data():
     db.add_all([ex1, ex2, ex3, ex4, ex5])
     db.commit()
 
-    print("Advanced seeding complete.")
+    print("Advanced seeding complete. Leaderboard populated.")
     db.close()
 
 
