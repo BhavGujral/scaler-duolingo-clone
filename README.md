@@ -38,6 +38,42 @@ The backend is built with FastAPI. Below are the primary endpoints that handle t
 ### Get Exercises
 `GET /api/lessons/{lesson_id}/exercises`
 Fetches a list of exercises based on the selected language.
+GET /api/leaderboard
+Retrieves the current leaderboard standings.
+[
+  {
+    "username": "Learner1",
+    "total_xp": 1500
+  }
+]
+Update Leaderboard
+POST /api/leaderboard/update
+Posts newly earned XP to the backend after a user completes a lesson.
+
+Request Body (JSON):
+
+JSON
+{
+  "username": "user123",
+  "xp": 25
+}
+Response (200 OK):
+
+JSON
+{
+  "status": "success"
+}
+Get User Stats
+GET /api/user
+Retrieves mock data for the current user's profile.
+
+Response (200 OK):
+
+JSON
+{
+  "streak_count": 5,
+  "total_xp": 1200
+}
 
 * **Query Parameters:** 
   * `lang` (string) - The language to fetch questions for (e.g., `Spanish`, `French`).
