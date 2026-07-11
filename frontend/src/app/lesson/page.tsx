@@ -3,7 +3,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { questionBank, Question } from "@/data/questions";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, HelpCircle, CheckCircle2, XCircle, Timer } from "lucide-react";
 import confetti from "canvas-confetti";
 import toast from "react-hot-toast";
@@ -13,7 +12,8 @@ function LessonEngine() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams.get('mode') || 'guided';
-    const { language, addXp } = useStore();
+    const lessonId = parseInt(searchParams.get('id') || '1');
+    const { language, addXp, completeLesson } = useStore();
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -109,7 +109,8 @@ function LessonEngine() {
         } else {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             addXp(sessionXp);
-            toast.success(`Session Complete! +${sessionXp} XP`);
+            completeLesson(lessonId); // Update local store with unlocked skill
+            toast.success(`Skill Complete! +${sessionXp} XP`);
             router.push("/");
         }
     };

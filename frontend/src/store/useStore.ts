@@ -9,13 +9,17 @@ interface AppState {
     theme: 'light' | 'dark';
     xp: number;
     streak: number;
+    hearts: number;
+    gems: number;
     joinDate: string;
     bots: Bot[];
+    completedLessons: number[];
     login: (username: string, language: string) => void;
     logout: () => void;
     setLanguage: (lang: string) => void;
     toggleTheme: () => void;
     addXp: (amount: number) => void;
+    completeLesson: (lessonId: number) => void;
     initializeBots: () => void;
     tickBots: () => void;
 }
@@ -37,15 +41,34 @@ const generateBots = (): Bot[] => {
 export const useStore = create<AppState>()(
     persist(
         (set, get) => ({
-            username: null, language: 'Spanish', theme: 'light', xp: 0, streak: 1, joinDate: new Date().toISOString(), bots: [],
+            username: null,
+            language: 'Spanish',
+            theme: 'light',
+            xp: 0,
+            streak: 1,
+            hearts: 5,
+            gems: 500,
+            joinDate: new Date().toISOString(),
+            bots: [],
+            completedLessons: [],
+
             login: (username, language) => set({ username, language, joinDate: new Date().toISOString() }),
             logout: () => set({ username: null, xp: 0 }),
             setLanguage: (language) => set({ language }),
             toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
             addXp: (amount) => set((state) => ({ xp: state.xp + amount })),
-            initializeBots: () => { if (get().bots.length === 0) set({ bots: generateBots() }); },
+            completeLesson: (lessonId) => set((state) => ({
+                completedLessons: Array.from(new Set([...state.completedLessons, lessonId]))
+            })),
+
+            initializeBots: () => {
+                if (get().bots.length === 0) set({ bots: generateBots() });
+            },
             tickBots: () => set((state) => {
-                const newBots = state.bots.map(bot => ({ ...bot, xp: Math.random() > 0.8 ? bot.xp + Math.floor(Math.random() * 15) : bot.xp })).sort((a, b) => b.xp - a.xp);
+                const newBots = state.bots.map(bot => ({
+                    ...bot,
+                    xp: Math.random() > 0.8 ? bot.xp + Math.floor(Math.random() * 15) : bot.xp
+                })).sort((a, b) => b.xp - a.xp);
                 return { bots: newBots };
             })
         }),
