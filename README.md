@@ -40,34 +40,37 @@ The backend is built with FastAPI. Below are the primary endpoints that handle t
 Fetches a list of exercises based on the selected language.
 GET /api/leaderboard
 Retrieves the current leaderboard standings.
+* **Response (200 OK):**
 [
   {
     "username": "Learner1",
     "total_xp": 1500
   }
-]
+
+* **Query Parameters:** 
 Update Leaderboard
 POST /api/leaderboard/update
 Posts newly earned XP to the backend after a user completes a lesson.
 
-Request Body (JSON):
+* **Response (200 OK):**
 
 JSON
 {
   "username": "user123",
   "xp": 25
 }
-Response (200 OK):
+* **Response (200 OK):**
 
 JSON
 {
   "status": "success"
 }
+* **Query Parameters:** 
 Get User Stats
 GET /api/user
 Retrieves mock data for the current user's profile.
 
-Response (200 OK):
+* **Response (200 OK):**
 
 JSON
 {
