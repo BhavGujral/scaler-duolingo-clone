@@ -1,114 +1,46 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Flame, Star, Heart, Home, Trophy, User as UserIcon, BookOpen } from "lucide-react";
+import { useStore } from "@/store/useStore";
+import { Flame, Star, Shield, Zap } from "lucide-react";
 
-export default function Dashboard() {
-  const [pathData, setPathData] = useState<any[]>([]);
-  const [userData, setUserData] = useState<any>(null);
+export default function Home() {
+  const { username, language, xp, streak, initializeBots } = useStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const name = localStorage.getItem("user_name");
-      const lang = localStorage.getItem("language") || "Spanish";
+    if (!username) router.push("/login");
+    initializeBots();
+  }, [username, router, initializeBots]);
 
-      if (!name) {
-        router.push("/login");
-        return;
-      }
-
-      fetch(`https://scaler-duolingo-clone.onrender.com/api/user?lang=${lang}`)
-        .then((res) => res.json())
-        .then(setUserData)
-        .catch(console.error);
-
-      fetch(`https://scaler-duolingo-clone.onrender.com/api/path?lang=${lang}`)
-        .then((res) => res.json())
-        .then(setPathData)
-        .catch(console.error);
-    }
-  }, [router]);
+  if (!username) return null;
 
   return (
-    <main className="flex min-h-screen flex-col items-center pb-24 font-sans text-gray-800 bg-gray-50">
-      <header className="sticky top-0 z-50 flex w-full max-w-3xl items-center justify-between border-b-2 border-gray-200 bg-white/80 px-6 py-4 backdrop-blur-md">
-        <div className="flex items-center gap-2 font-black text-orange-500">
-          <Flame fill="currentColor" size={24} />
-          <span className="text-xl">{userData?.streak_count || 0}</span>
+    <main className="max-w-4xl mx-auto p-6 pt-10">
+      <header className="flex justify-between items-center mb-12 bg-white dark:bg-slate-800 p-5 rounded-[2rem] border-2 border-b-[6px] border-slate-200 dark:border-slate-700">
+        <div className="font-extrabold text-2xl text-slate-800 dark:text-white flex items-center gap-3">
+          <span className="text-3xl">{language === 'Spanish' ? '🇪🇸' : language === 'French' ? '🇫🇷' : language === 'German' ? '🇩🇪' : language === 'Japanese' ? '🇯🇵' : '🌍'}</span>
+          {language}
         </div>
-        <div className="flex items-center gap-2 font-black text-blue-500">
-          <Star fill="currentColor" size={24} />
-          <span className="text-xl">{userData?.total_xp || 0}</span>
-        </div>
-        <div className="flex items-center gap-2 font-black text-red-500">
-          <Heart fill="currentColor" size={24} />
-          <span className="text-xl">{userData?.hearts || 0}</span>
+        <div className="flex gap-8">
+          <div className="flex items-center gap-2 font-extrabold text-orange-500 text-xl"><Flame fill="currentColor" size={28} /> {streak}</div>
+          <div className="flex items-center gap-2 font-extrabold text-blue-500 text-xl"><Star fill="currentColor" size={28} /> {xp}</div>
         </div>
       </header>
 
-      <div className="w-full max-w-2xl px-6 py-12 flex flex-col items-center">
-        {pathData.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 mt-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-green-500" />
-            <p className="font-bold text-gray-400 text-lg">Loading Course Data...</p>
-          </div>
-        ) : (
-          pathData.map((unit, index) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              key={unit.id}
-              className="mb-12 flex w-full flex-col relative"
-            >
-              <div className="mb-8 rounded-3xl bg-green-500 p-6 text-white shadow-[0_6px_0_0_#46a302] relative overflow-hidden">
-                <div className="absolute -right-10 -top-10 opacity-20"><BookOpen size={150} /></div>
-                <h2 className="text-3xl font-black tracking-tight">{unit.title}</h2>
-                <p className="mt-2 text-green-100 font-bold text-lg">Section {index + 1}</p>
-              </div>
+      <div className="grid md:grid-cols-2 gap-8">
+        <button onClick={() => router.push('/lesson?mode=guided')} className="text-left bg-white dark:bg-slate-800 p-8 rounded-[2rem] card-3d hover:bg-slate-50 dark:hover:bg-slate-800/80 group">
+          <Shield size={56} className="text-green-500 mb-6 group-hover:scale-110 transition-transform" />
+          <h2 className="text-3xl font-extrabold mb-3 text-slate-800 dark:text-white">Learn with Guidance</h2>
+          <p className="text-slate-500 font-bold text-lg">Hints enabled. Standard XP.</p>
+        </button>
 
-              <div className="flex flex-col items-center gap-8 py-4 relative">
-                {unit.skills.map((skill: any, i: number) => {
-                  const isEven = i % 2 === 0;
-                  const offset = i === 0 ? 0 : isEven ? -40 : 40;
-
-                  return (
-                    <motion.div
-                      key={skill.id}
-                      className="flex flex-col items-center relative z-10"
-                      style={{ transform: `translateX(${offset}px)` }}
-                    >
-                      <button
-                        onClick={() => router.push('/lesson')}
-                        className="button-3d flex h-24 w-24 items-center justify-center rounded-full bg-yellow-400 border-b-8 border-yellow-600 hover:bg-yellow-300 transition-colors"
-                      >
-                        <Star fill="white" stroke="white" size={40} />
-                      </button>
-                      <span className="mt-4 font-bold text-lg text-gray-700 bg-white px-4 py-2 rounded-2xl shadow-sm border-2 border-gray-100">
-                        {skill.title}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))
-        )}
+        <button onClick={() => router.push('/lesson?mode=test')} className="text-left bg-white dark:bg-slate-800 p-8 rounded-[2rem] card-3d hover:bg-slate-50 dark:hover:bg-slate-800/80 group">
+          <Zap size={56} className="text-purple-500 mb-6 group-hover:scale-110 transition-transform" />
+          <h2 className="text-3xl font-extrabold mb-3 text-slate-800 dark:text-white">Test Mode (No Hints)</h2>
+          <p className="text-slate-500 font-bold text-lg">Race the clock. Earn bonus XP!</p>
+        </button>
       </div>
-
-      <nav className="fixed bottom-0 flex w-full max-w-3xl justify-around border-t-2 border-gray-200 bg-white p-4 z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <button onClick={() => router.push('/')} className="flex flex-col items-center text-green-500 hover:bg-green-50 p-3 rounded-2xl transition-colors">
-          <Home size={32} strokeWidth={2.5} />
-        </button>
-        <button onClick={() => router.push('/leaderboard')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
-          <Trophy size={32} strokeWidth={2.5} />
-        </button>
-        <button onClick={() => router.push('/profile')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
-          <UserIcon size={32} strokeWidth={2.5} />
-        </button>
-      </nav>
     </main>
   );
 }

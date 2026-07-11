@@ -1,83 +1,41 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Home, Trophy, User as UserIcon, Shield } from "lucide-react";
+import { useEffect } from "react";
+import { useStore } from "@/store/useStore";
+import { Shield } from "lucide-react";
 
 export default function Leaderboard() {
-    const [leaderboard, setLeaderboard] = useState<any[]>([]);
-    const router = useRouter();
+    const { username, xp, bots, tickBots } = useStore();
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            if (!localStorage.getItem("user_name")) {
-                router.push("/login");
-                return;
-            }
+        const interval = setInterval(tickBots, 5000);
+        return () => clearInterval(interval);
+    }, [tickBots]);
 
-            fetch("https://scaler-duolingo-clone.onrender.com/api/leaderboard")
-                .then((res) => res.json())
-                .then(setLeaderboard)
-                .catch(console.error);
-        }
-    }, [router]);
+    const allUsers = [...bots, { id: 'current_user', username: username || 'You', xp, avatar: username?.[0].toUpperCase() || 'U' }].sort((a, b) => b.xp - a.xp);
 
     return (
-        <main className="flex min-h-screen flex-col items-center bg-white pb-24 font-sans text-gray-800">
-
-            <header className="sticky top-0 z-50 flex w-full max-w-3xl items-center justify-center border-b-2 border-gray-200 bg-white/80 px-6 py-6 backdrop-blur-md">
-                <h1 className="text-2xl font-black text-gray-700 tracking-wide uppercase">Leaderboard</h1>
-            </header>
-
-            <div className="w-full max-w-2xl px-6 py-10 flex flex-col items-center">
-
-                <div className="mb-10 p-6 bg-yellow-400 rounded-3xl w-full flex flex-col items-center shadow-[0_6px_0_0_#ca8a04]">
-                    <Shield size={64} className="text-white mb-4" />
-                    <h2 className="text-3xl font-black text-white text-center">Obsidian League</h2>
-                    <p className="text-yellow-100 font-bold mt-2">Top 10 advance to the next league</p>
-                </div>
-
-                <div className="w-full flex flex-col gap-4">
-                    {leaderboard.length === 0 ? (
-                        <div className="flex flex-col items-center gap-4 mt-10">
-                            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-yellow-400" />
-                        </div>
-                    ) : (
-                        leaderboard.map((user, index) => (
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                key={index}
-                                className="flex items-center justify-between rounded-2xl p-5 border-2 border-gray-100 bg-white"
-                            >
-                                <div className="flex items-center gap-6">
-                                    <span className={`text-2xl font-black ${index === 0 ? "text-yellow-500" : index === 1 ? "text-gray-400" : index === 2 ? "text-amber-700" : "text-gray-300"}`}>
-                                        {index + 1}
-                                    </span>
-                                    <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-500">
-                                        {user.username.charAt(0)}
-                                    </div>
-                                    <span className="text-xl font-bold text-gray-700">{user.username}</span>
-                                </div>
-                                <span className="text-lg font-black text-gray-500">{user.total_xp} XP</span>
-                            </motion.div>
-                        ))
-                    )}
-                </div>
+        <main className="max-w-2xl mx-auto p-6 pt-10">
+            <div className="mb-12 p-10 bg-yellow-400 rounded-[2rem] text-center border-b-[8px] border-yellow-500 shadow-sm">
+                <Shield size={80} className="text-white mx-auto mb-4 drop-shadow-sm" />
+                <h1 className="text-4xl font-extrabold text-white tracking-tight drop-shadow-sm">Obsidian League</h1>
+                <p className="text-yellow-100 font-extrabold mt-3 text-lg">Top 10 advance to the next league</p>
             </div>
 
-            <nav className="fixed bottom-0 flex w-full max-w-3xl justify-around border-t-2 border-gray-200 bg-white p-4 z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                <button onClick={() => router.push('/')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
-                    <Home size={32} strokeWidth={2.5} />
-                </button>
-                <button onClick={() => router.push('/leaderboard')} className="flex flex-col items-center text-blue-500 hover:bg-blue-50 p-3 rounded-2xl transition-colors">
-                    <Trophy size={32} strokeWidth={2.5} />
-                </button>
-                <button onClick={() => router.push('/profile')} className="flex flex-col items-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 p-3 rounded-2xl transition-colors">
-                    <UserIcon size={32} strokeWidth={2.5} />
-                </button>
-            </nav>
+            <div className="flex flex-col gap-4">
+                {allUsers.map((user, index) => {
+                    const isCurrentUser = user.id === 'current_user';
+                    return (
+                        <div key={user.id} className={`flex items-center justify-between p-6 rounded-[1.5rem] border-2 border-b-[6px] ${isCurrentUser ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
+                            <div className="flex items-center gap-8">
+                                <span className={`w-8 text-center font-extrabold text-2xl ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-slate-400' : index === 2 ? 'text-amber-600' : 'text-slate-400 dark:text-slate-500'}`}>{index + 1}</span>
+                                <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-extrabold text-2xl text-slate-500 dark:text-slate-300">{user.avatar}</div>
+                                <span className={`font-extrabold text-xl ${isCurrentUser ? 'text-green-600 dark:text-green-400' : 'text-slate-800 dark:text-white'}`}>{user.username}</span>
+                            </div>
+                            <span className="font-extrabold text-slate-500 text-xl">{user.xp} XP</span>
+                        </div>
+                    );
+                })}
+            </div>
         </main>
     );
-}   
+}
