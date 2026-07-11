@@ -41,6 +41,7 @@ Fetches a list of exercises based on the selected language.
 GET /api/leaderboard
 Retrieves the current leaderboard standings.
 * **Response (200 OK):**
+    ```json
 [
   {
     "username": "Learner1",
@@ -54,14 +55,14 @@ Posts newly earned XP to the backend after a user completes a lesson.
 
 * **Response (200 OK):**
 
-JSON
+  ```json
 {
   "username": "user123",
   "xp": 25
 }
 * **Response (200 OK):**
 
-JSON
+  ```json
 {
   "status": "success"
 }
@@ -72,7 +73,7 @@ Retrieves mock data for the current user's profile.
 
 * **Response (200 OK):**
 
-JSON
+  ```json
 {
   "streak_count": 5,
   "total_xp": 1200
