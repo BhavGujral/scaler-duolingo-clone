@@ -47,7 +47,7 @@ Retrieves the current leaderboard standings.
     "username": "Learner1",
     "total_xp": 1500
   }
-
+]
 * **Query Parameters:** 
 Update Leaderboard
 POST /api/leaderboard/update
@@ -56,16 +56,20 @@ Posts newly earned XP to the backend after a user completes a lesson.
 * **Response (200 OK):**
 
   ```json
+ [
 {
   "username": "user123",
   "xp": 25
 }
+]
 * **Response (200 OK):**
 
   ```json
+ [
 {
   "status": "success"
 }
+]
 * **Query Parameters:** 
 Get User Stats
 GET /api/user
@@ -74,11 +78,12 @@ Retrieves mock data for the current user's profile.
 * **Response (200 OK):**
 
   ```json
+ [
 {
   "streak_count": 5,
   "total_xp": 1200
 }
-
+]
 * **Query Parameters:** 
   * `lang` (string) - The language to fetch questions for (e.g., `Spanish`, `French`).
 * **Response (200 OK):**
