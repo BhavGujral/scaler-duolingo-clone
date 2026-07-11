@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { questionBank, Question } from "@/data/questions";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, HelpCircle, CheckCircle2, XCircle, Timer } from "lucide-react";
 import confetti from "canvas-confetti";
 import toast from "react-hot-toast";
@@ -22,9 +23,32 @@ function LessonEngine() {
     const [timeLeft, setTimeLeft] = useState(15);
     const [sessionXp, setSessionXp] = useState(0);
 
+    // Match Question Specific State
+    const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
+    const [activeMatch, setActiveMatch] = useState<{ term: string | null, match: string | null }>({ term: null, match: null });
+    const [shuffledTerms, setShuffledTerms] = useState<string[]>([]);
+    const [shuffledMatches, setShuffledMatches] = useState<string[]>([]);
+
+    const setupQuestion = (index: number, qs: Question[]) => {
+        const q = qs[index];
+        setSelected(q.type === 'rearrange' ? [] : null);
+        setStatus('idle');
+        setShowHint(false);
+        setTimeLeft(15);
+        setMatchedPairs([]);
+        setActiveMatch({ term: null, match: null });
+
+        if (q.type === 'match') {
+            setShuffledTerms([...q.pairs!.map(p => p.term)].sort(() => Math.random() - 0.5));
+            setShuffledMatches([...q.pairs!.map(p => p.match)].sort(() => Math.random() - 0.5));
+        }
+    };
+
     useEffect(() => {
         const bank = questionBank[language] || questionBank['Spanish'];
-        setQuestions([...bank].sort(() => Math.random() - 0.5).slice(0, 5));
+        const shuffled = [...bank].sort(() => Math.random() - 0.5).slice(0, 5);
+        setQuestions(shuffled);
+        if (shuffled.length > 0) setupQuestion(0, shuffled);
     }, [language]);
 
     useEffect(() => {
@@ -41,6 +65,27 @@ function LessonEngine() {
 
     if (questions.length === 0) return <div className="min-h-screen flex items-center justify-center font-bold text-slate-400 text-2xl">Loading...</div>;
     const current = questions[currentIndex];
+
+    const handleMatchClick = (value: string, type: 'term' | 'match') => {
+        if (activeMatch.term && activeMatch.match) return;
+
+        const newActive = { ...activeMatch, [type]: value };
+        setActiveMatch(newActive);
+
+        if (newActive.term && newActive.match) {
+            const isPair = current.pairs?.find(p => p.term === newActive.term && p.match === newActive.match);
+            if (isPair) {
+                const newMatched = [...matchedPairs, newActive.term];
+                setMatchedPairs(newMatched);
+                if (newMatched.length === current.pairs?.length) {
+                    setSelected(true);
+                }
+                setActiveMatch({ term: null, match: null });
+            } else {
+                setTimeout(() => setActiveMatch({ term: null, match: null }), 400);
+            }
+        }
+    };
 
     const handleCheck = (timeOut = false) => {
         if (timeOut) { setStatus('wrong'); return; }
@@ -59,7 +104,8 @@ function LessonEngine() {
 
     const nextQuestion = () => {
         if (currentIndex < questions.length - 1) {
-            setCurrentIndex(prev => prev + 1); setSelected(current.type === 'rearrange' ? [] : null); setStatus('idle'); setShowHint(false); setTimeLeft(15);
+            setCurrentIndex(prev => prev + 1);
+            setupQuestion(currentIndex + 1, questions);
         } else {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             addXp(sessionXp);
@@ -125,13 +171,45 @@ function LessonEngine() {
                 )}
 
                 {current.type === 'match' && (
-                    <div className="grid grid-cols-2 gap-4">
-                        {current.pairs?.map((p, i) => (
-                            <div key={i} className="contents">
-                                <button className="p-6 border-2 border-b-[6px] border-slate-200 dark:border-slate-700 rounded-[1.5rem] bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xl">{p.term}</button>
-                                <button onClick={() => setSelected(true)} className={`p-6 border-2 border-b-[6px] rounded-[1.5rem] font-bold text-xl transition-all active:border-b-2 active:translate-y-[4px] ${selected ? 'border-green-400 bg-green-50 text-green-600 dark:bg-green-900/40' : 'border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>{p.match}</button>
-                            </div>
-                        ))}
+                    <div className="flex justify-between gap-4">
+                        <div className="flex flex-col gap-4 w-1/2">
+                            {shuffledTerms.map(term => {
+                                const isMatched = matchedPairs.includes(term);
+                                const isActive = activeMatch.term === term;
+                                return (
+                                    <button
+                                        key={term} onClick={() => !isMatched && handleMatchClick(term, 'term')} disabled={isMatched}
+                                        className={`p-5 md:p-6 border-2 rounded-[1.5rem] font-bold text-lg md:text-xl transition-all ${isMatched
+                                                ? 'border-slate-200 bg-slate-100 text-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-600 opacity-60 border-b-2 translate-y-[4px]'
+                                                : isActive
+                                                    ? 'border-blue-400 bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:border-blue-500 border-b-2 translate-y-[4px]'
+                                                    : 'border-b-[6px] border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 active:border-b-2 active:translate-y-[4px]'
+                                            }`}
+                                    >
+                                        {term}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <div className="flex flex-col gap-4 w-1/2">
+                            {shuffledMatches.map(match => {
+                                const isMatched = !!current.pairs?.find(p => matchedPairs.includes(p.term) && p.match === match);
+                                const isActive = activeMatch.match === match;
+                                return (
+                                    <button
+                                        key={match} onClick={() => !isMatched && handleMatchClick(match, 'match')} disabled={isMatched}
+                                        className={`p-5 md:p-6 border-2 rounded-[1.5rem] font-bold text-lg md:text-xl transition-all ${isMatched
+                                                ? 'border-slate-200 bg-slate-100 text-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-600 opacity-60 border-b-2 translate-y-[4px]'
+                                                : isActive
+                                                    ? 'border-blue-400 bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:border-blue-500 border-b-2 translate-y-[4px]'
+                                                    : 'border-b-[6px] border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 active:border-b-2 active:translate-y-[4px]'
+                                            }`}
+                                    >
+                                        {match}
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
